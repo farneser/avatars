@@ -1,0 +1,15 @@
+[package]
+name = "avatars"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.37", features = ["rt", "rt-multi-thread", "macros"] }
+#sqlx = { version = "0.7", features = ["runtime-async-std", "postgres"] }
+actix-web = "4.5"
+tera = "1.19"
+application = { path = "application" }
+persistence = { path = "persistence" }
+
+#[workspace]
+#members = ["application", "domain", "persistence", "web"]
