@@ -1,5 +1,8 @@
+mod adapters;
+
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Executor, PgPool};
+use std::path::Path;
 
 async fn setup_database() -> Result<PgPool, sqlx::Error> {
     let pool = PgPoolOptions::new()
@@ -10,11 +13,8 @@ async fn setup_database() -> Result<PgPool, sqlx::Error> {
     Ok(pool)
 }
 
-async fn run_migrations(pool: &PgPool) -> Result<(), String> {
-    let current_dir = std::env::current_dir().expect("Failed to get current directory");
-    let migrations_path = current_dir.join("migrations");
-
-    let migrator = sqlx::migrate::Migrator::new(migrations_path.as_path())
+async fn run_migrations(pool: &PgPool, migrations_path: String) -> Result<(), String> {
+    let migrator = sqlx::migrate::Migrator::new(Path::new(migrations_path.as_str()))
         .await
         .map_err(|e| format!("Failed to initialize migrator: {}", e))?;
 
@@ -67,7 +67,7 @@ pub async fn init_db() -> Result<PgPool, String> {
 
     let pool = pool_result.unwrap();
 
-    if let Err(err) = run_migrations(&pool).await {
+    if let Err(err) = run_migrations(&pool, "persistence/migrations".to_string()).await {
         eprintln!("Error running migrations: {}", err);
 
         return Err(err);
