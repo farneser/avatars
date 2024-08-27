@@ -9,6 +9,7 @@ pub struct User {
     pub register_complete: bool,
     pub register_date: DateTime<Utc>,
     pub last_update_date: DateTime<Utc>,
+    pub last_login_date: Option<DateTime<Utc>>,
 }
 
 impl User {
@@ -22,6 +23,7 @@ impl User {
             login_attempts: 0,
             register_date: now,
             last_update_date: now,
+            last_login_date: None,
         }
     }
 }
