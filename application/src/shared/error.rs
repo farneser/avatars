@@ -4,6 +4,7 @@ use std::fmt::{self, Display, Formatter};
 pub enum AppError {
     NotFound(String),
     BadRequest(String),
+    AuthError(String),
     InternalError(String),
 }
 
@@ -13,6 +14,7 @@ impl Display for AppError {
             AppError::NotFound(msg) => write!(f, "Not found: {}", msg),
             AppError::BadRequest(msg) => write!(f, "Bad request: {}", msg),
             AppError::InternalError(msg) => write!(f, "Internal error: {}", msg),
+            AppError::AuthError(msg) => write!(f, "Auth error: {}", msg),
         }
     }
 }
