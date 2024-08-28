@@ -21,6 +21,7 @@ impl IdProvider for SimpleIdProvider {
                 "abcdefghijklmnopqrstuvwxyz",
                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
                 "0123456789",
+                "!@#$%^&*()_+-=[]{}|;:,.<>?/`~",
             ],
             length,
         )
