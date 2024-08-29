@@ -1,6 +1,5 @@
-use crate::shared::error::AppError;
+use crate::shared::error::AppStatus;
 use async_trait::async_trait;
-use std::error::Error;
 
 pub mod user;
 
@@ -11,5 +10,5 @@ pub trait CommandHandler<REQUEST, RESPONSE>
 where
     REQUEST: Command<RESPONSE>,
 {
-    async fn handle(&self, command: REQUEST) -> Result<RESPONSE, AppError>;
+    async fn handle(&mut self, command: REQUEST) -> Result<RESPONSE, AppStatus>;
 }
