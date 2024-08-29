@@ -1,7 +1,7 @@
-mod adapters;
+pub mod adapters;
 
 use sqlx::postgres::PgPoolOptions;
-use sqlx::{Executor, PgPool};
+use sqlx::PgPool;
 use std::path::Path;
 
 async fn setup_database() -> Result<PgPool, sqlx::Error> {

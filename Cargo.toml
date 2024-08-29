@@ -10,6 +10,7 @@ actix-web = "4.5"
 tera = "1.19"
 application = { path = "application" }
 persistence = { path = "persistence" }
+domain = { path = "domain" }
 
 [workspace]
 members = ["application", "domain", "persistence", "web"]

@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use domain::models::otp::{Otp, OTP_LENGTH};
 use domain::models::user::User;
 use domain::repositories::id_provider::IdProvider;
-use domain::repositories::opt_repository::OtpRepository;
+use domain::repositories::otp_repository::OtpRepository;
 use domain::repositories::session_repository::SessionRepository;
 use domain::repositories::user_repository::UserRepository;
 use domain::repositories::DbError;

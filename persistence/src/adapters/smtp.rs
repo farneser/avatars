@@ -1,4 +1,5 @@
-use domain::models::otp::OTP;
+use async_trait::async_trait;
+use domain::models::otp::Otp;
 use domain::services::mail_service::{EmailError, MailService};
 use lettre::message::{header, Mailbox, MultiPart, SinglePart};
 use lettre::transport::smtp::authentication::Credentials;
@@ -30,6 +31,7 @@ impl SmtpService {
     }
 }
 
+#[async_trait]
 impl MailService for SmtpService {
     async fn send(&self, email: &str, subject: &str, html_body: &str, plain_body: &str) -> Result<(), EmailError> {
         if email.parse::<Mailbox>().is_err() {
@@ -38,22 +40,22 @@ impl MailService for SmtpService {
 
         let email = Message::builder()
             .from(self.email_from.clone())
-            .to(email.parse().unwrap())
+            .to(email.parse::<Mailbox>().unwrap())
             .subject(subject)
             .multipart(
                 MultiPart::alternative()
                     .singlepart(
                         SinglePart::builder()
                             .header(header::ContentType::TEXT_PLAIN)
-                            .body(plain_body),
+                            .body(plain_body.to_string()), // Ensure body is a String
                     )
                     .singlepart(
                         SinglePart::builder()
                             .header(header::ContentType::TEXT_HTML)
-                            .body(html_body),
+                            .body(html_body.to_string()), // Ensure body is a String
                     ),
             )
-            .expect("failed to build email");
+            .map_err(|e| EmailError::InvalidMail(e.to_string()))?; // Handle email building error
 
         let creds = Credentials::new(self.username.clone(), self.password.clone());
 
@@ -62,17 +64,17 @@ impl MailService for SmtpService {
             .credentials(creds)
             .build();
 
-        mailer.send(&email).expect("TODO: panic message");
+        mailer.send(&email).map_err(|e| EmailError::InvalidMail(e.to_string()))?; // Handle send error
 
         Ok(())
     }
 
-    async fn send_otp(&self, email: &str, otp: OTP) -> Result<(), EmailError> {
+    async fn send_otp(&self, email: &str, otp: Otp) -> Result<(), EmailError> {
         self.send(
             email,
             "Your OTP",
-            &format!("Your OTP is: {}", otp.value),
-            &format!("Your OTP is: {}", otp.value),
-        ).await.expect("TODO: panic message");
+            &format!("Your OTP is: {}", otp.id),
+            &format!("Your OTP is: {}", otp.id),
+        ).await
     }
 }
