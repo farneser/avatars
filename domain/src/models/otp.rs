@@ -1,7 +1,6 @@
 use chrono::{DateTime, Utc};
 use sqlx::FromRow;
-
-pub const OTP_LENGTH: usize = 8;
+use crate::repositories::OTP_LENGTH;
 
 pub enum OtpError {
     InvalidLength,

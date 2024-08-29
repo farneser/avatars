@@ -1,14 +1,11 @@
 CREATE TABLE sessions (
-    id BIGSERIAL PRIMARY KEY,
-    user_id VARCHAR NOT NULL,
-    value VARCHAR NOT NULL,
+    id BIGSERIAL PRIMARY KEY UNIQUE,
+    user_id BIGINT NOT NULL,
+    value VARCHAR NOT NULL UNIQUE,
     created_at TIMESTAMPTZ NOT NULL,
     expired_at TIMESTAMPTZ NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(username)
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-CREATE SEQUENCE sessions_id_seq
-    START WITH 1
-    INCREMENT BY 1;
-
-CREATE INDEX idx_sessions_value ON sessions(value);
+CREATE INDEX id_sessions_value ON sessions(id);
+CREATE INDEX value_sessions_value ON sessions(value);

@@ -5,6 +5,8 @@ pub mod user_repository;
 pub mod id_provider;
 pub mod session_repository;
 pub mod otp_repository;
+pub const OTP_LENGTH: usize = 8;
+
 
 #[derive(thiserror::Error, Debug, PartialEq)]
 pub enum DbError {

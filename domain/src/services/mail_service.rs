@@ -1,4 +1,4 @@
-use crate::models::otp::Otp;
+use crate::views::otp_view::OtpView;
 use async_trait::async_trait;
 use std::fmt::Display;
 
@@ -20,7 +20,7 @@ impl Display for EmailError {
 #[async_trait]
 pub trait MailService {
     async fn send(&self, email: &str, subject: &str, html_body: &str, plain_body: &str) -> Result<(), EmailError>;
-    async fn send_otp(&self, email: &str, otp: Otp) -> Result<(), EmailError>;
+    async fn send_otp(&self, email: &str, otp: OtpView) -> Result<(), EmailError>;
 }
 
 pub struct InMemoryMailService {}
@@ -39,7 +39,7 @@ impl MailService for InMemoryMailService {
         Ok(())
     }
 
-    async fn send_otp(&self, email: &str, otp: Otp) -> Result<(), EmailError> {
+    async fn send_otp(&self, email: &str, otp: OtpView) -> Result<(), EmailError> {
         println!("email: {}, otp: {:?}", email, otp);
 
         Ok(())

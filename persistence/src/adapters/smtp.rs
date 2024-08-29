@@ -1,6 +1,6 @@
 use async_trait::async_trait;
-use domain::models::otp::Otp;
 use domain::services::mail_service::{EmailError, MailService};
+use domain::views::otp_view::OtpView;
 use lettre::message::{header, Mailbox, MultiPart, SinglePart};
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
@@ -69,7 +69,7 @@ impl MailService for SmtpService {
         Ok(())
     }
 
-    async fn send_otp(&self, email: &str, otp: Otp) -> Result<(), EmailError> {
+    async fn send_otp(&self, email: &str, otp: OtpView) -> Result<(), EmailError> {
         self.send(
             email,
             "Your OTP",
