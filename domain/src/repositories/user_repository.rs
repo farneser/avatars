@@ -1,4 +1,3 @@
-use crate::models::otp::Otp;
 use crate::models::user::User;
 use crate::repositories::DbError;
 use async_trait::async_trait;

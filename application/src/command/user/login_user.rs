@@ -2,17 +2,15 @@ use crate::command::{Command, CommandHandler};
 use crate::shared::error::AppStatus;
 use crate::shared::error::AppStatus::{AuthError, BadRequest};
 use async_trait::async_trait;
-use domain::models::otp::{Otp, OTP_LENGTH};
+use domain::models::otp::Otp;
 use domain::models::user::User;
 use domain::repositories::id_provider::IdProvider;
 use domain::repositories::otp_repository::OtpRepository;
 use domain::repositories::session_repository::SessionRepository;
 use domain::repositories::user_repository::UserRepository;
-use domain::repositories::DbError;
 use domain::services::mail_service::MailService;
 use domain::services::user_service::UserService;
 use log::info;
-use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub struct LoginUserCommand {
@@ -120,5 +118,99 @@ where
             Ok(u) => Ok(u),
             Err((err)) => Err(AuthError(err)),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use domain::models::otp::OTP_LENGTH;
+    use super::*;
+    use domain::repositories::id_provider::SimpleIdProvider;
+    use domain::repositories::otp_repository::InMemoryOtpRepository;
+    use domain::repositories::session_repository::InMemorySessionRepository;
+    use domain::repositories::user_repository::InMemoryUserRepository;
+    use domain::services::mail_service::InMemoryMailService;
+
+    #[tokio::test]
+    async fn test_handle_with_empty_username() {
+        // Given
+        let ur = InMemoryUserRepository::new();
+        let sr = InMemorySessionRepository::new();
+        let or = InMemoryOtpRepository::new();
+        let ip = SimpleIdProvider::new();
+        let ms = InMemoryMailService::new();
+
+        let mut handler = LoginUserCommandHandler::new(ur, sr, or, ip, ms);
+        let command = LoginUserCommand::new("".to_string(), None);
+
+        // When
+        let result = handler.handle(command).await;
+
+        // Then
+        assert!(matches!(result, Err(BadRequest(_))));
+    }
+
+    #[tokio::test]
+    async fn test_handle_with_valid_username_and_no_otp() {
+        // Given
+        let ur = InMemoryUserRepository::new();
+        let sr = InMemorySessionRepository::new();
+        let or = InMemoryOtpRepository::new();
+        let ip = SimpleIdProvider::new();
+        let ms = InMemoryMailService::new();
+
+        let mut handler = LoginUserCommandHandler::new(ur, sr, or, ip, ms);
+        let command = LoginUserCommand::new("test_user".to_string(), None);
+
+        // When
+        let result = handler.handle(command).await;
+
+        // Then
+        assert!(matches!(result, Err(AppStatus::Ok(_))));
+    }
+
+    #[derive(Debug, Clone)]
+    struct TestIdProvider {}
+
+    impl TestIdProvider {
+        fn new() -> Self {
+            Self {}
+        }
+    }
+
+    #[async_trait]
+    impl IdProvider for TestIdProvider {
+        fn get_id(&self, length: usize) -> String {
+            self.get_numeric_id(length)
+        }
+
+        fn get_numeric_id(&self, length: usize) -> String {
+            self.get_from_alphabet(vec![], length)
+        }
+
+        fn get_from_alphabet(&self, _: Vec<&str>, length: usize) -> String {
+            (0..length).map(|i| i.to_string()).collect()
+        }
+    }
+
+    #[tokio::test]
+    async fn test_handle_with_valid_username_and_otp() {
+        // Given
+        let ur = InMemoryUserRepository::new();
+        let sr = InMemorySessionRepository::new();
+        let or = InMemoryOtpRepository::new();
+        let ip = TestIdProvider::new();
+        let ms = InMemoryMailService::new();
+
+        let mut handler = LoginUserCommandHandler::new(ur, sr, or, ip.clone(), ms);
+        let start_command = LoginUserCommand::new("test_user".to_string(), None);
+        let command = LoginUserCommand::new("test_user".to_string(), Some(ip.get_numeric_id(OTP_LENGTH)));
+
+        // When
+        let _ = handler.handle(start_command).await;
+        let result = handler.handle(command).await;
+
+        // Then
+        assert!(matches!(result, Ok(_)));
     }
 }
