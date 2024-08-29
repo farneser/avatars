@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 pub mod user_repository;
 pub mod id_provider;
 pub mod session_repository;
-pub mod opt_repository;
+pub mod otp_repository;
 
 #[derive(thiserror::Error, Debug, PartialEq)]
 pub enum DbError {

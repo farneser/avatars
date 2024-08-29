@@ -31,3 +31,20 @@ impl Display for Email {
         write!(f, "{}", self.value)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::models::email_address::Email;
+
+    #[tokio::test]
+    pub async fn test_email_model_valid() {
+        // Given
+        let email = Email::new(1, "example@email.com".to_owned());
+
+        // Then
+        assert_eq!(email.id, -1);
+        assert_eq!(email.user_id, 1);
+        assert_eq!(email.value, "example@email.com");
+        assert_eq!(email.is_verified, false);
+    }
+}

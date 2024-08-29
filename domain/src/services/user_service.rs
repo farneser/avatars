@@ -2,7 +2,7 @@ use crate::models::otp::{Otp, OTP_LENGTH};
 use crate::models::session::Session;
 use crate::models::user::User;
 use crate::repositories::id_provider::IdProvider;
-use crate::repositories::opt_repository::OtpRepository;
+use crate::repositories::otp_repository::OtpRepository;
 use crate::repositories::session_repository::SessionRepository;
 use crate::repositories::user_repository::UserRepository;
 

@@ -40,3 +40,68 @@ impl Session {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::{Duration, Utc};
+    use tokio::time::{sleep, Duration as TokioDuration};
+
+    #[tokio::test]
+    async fn test_session_initialization() {
+        // Given
+        let user_id = String::from("user123");
+        let value = String::from("session_token");
+        let lifetime_seconds = 3600;
+
+        // When
+        let session = Session::new(value.clone(), user_id.clone(), lifetime_seconds);
+
+        // Then
+        assert_eq!(session.user_id, user_id);
+        assert_eq!(session.value, value);
+        assert_eq!(session.id, 0);
+
+        let now = Utc::now();
+
+        assert!(session.created_at <= now);
+        assert!(session.expired_at > now);
+        assert_eq!(
+            session.expired_at,
+            session.created_at + Duration::seconds(lifetime_seconds as i64)
+        );
+    }
+
+    #[tokio::test]
+    async fn test_session_lifetime() {
+        // Given
+        let user_id = String::from("user123");
+        let value = String::from("session_token");
+        let lifetime_seconds = 3600;
+
+        // When
+        let session = Session::new(value.clone(), user_id.clone(), lifetime_seconds);
+
+        // Then
+        let expected_expiry = session.created_at + Duration::seconds(lifetime_seconds as i64);
+
+        assert_eq!(session.expired_at, expected_expiry);
+    }
+
+    #[tokio::test]
+    async fn test_session_expiration() {
+        // Given
+        let user_id = String::from("user123");
+        let value = String::from("session_token");
+        let lifetime_seconds = 1; // 1 second
+
+        // When
+        let session = Session::new(value.clone(), user_id.clone(), lifetime_seconds);
+
+        sleep(TokioDuration::from_secs(3)).await;
+
+        // Then
+        let now = Utc::now();
+        assert!(session.expired_at <= now, "Session should be expired");
+    }
+}

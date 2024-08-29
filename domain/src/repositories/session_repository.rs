@@ -75,15 +75,81 @@ impl SessionRepository for InMemorySessionRepository {
     }
 
     async fn destroy(&mut self, id: &str) -> Result<bool, String> {
-        let session = self.sessions.iter().find(|s| s.value == id);
+        if let Some(index) = self.sessions.iter().position(|s| s.value == id) {
+            self.sessions.remove(index);
 
-        match session {
-            Some(_) => Ok(true),
-            None => Err("Session not found".to_string()),
+            Ok(true)
+        } else {
+            Err("Session not found".to_string())
         }
     }
 
     async fn cleanup(&mut self) -> Result<(), String> {
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_test_session(id: &str) -> Session {
+        Session::new(id.to_string(), "user123".to_owned(), 300)
+    }
+
+    #[tokio::test]
+    async fn test_load() {
+        // Given
+        let mut repo = InMemorySessionRepository::new();
+        let session = create_test_session("1");
+        repo.save(&session).await;
+
+        // When
+        let loaded = repo.load("1").await;
+
+        // Then
+        assert!(loaded.is_some());
+        assert_eq!(loaded.unwrap().value, "1");
+    }
+
+    #[tokio::test]
+    async fn test_save() {
+        // Given
+        let mut repo = InMemorySessionRepository::new();
+        let session = create_test_session("1");
+
+        // When
+        let id = repo.save(&session).await;
+
+        // Then
+        assert_eq!(id, "1");
+        assert!(repo.load("1").await.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_destroy() {
+        // Given
+        let mut repo = InMemorySessionRepository::new();
+        let session = create_test_session("1");
+        repo.save(&session).await;
+
+        // When
+        let result = repo.destroy("1").await;
+
+        // Then
+        assert!(result.is_ok());
+        assert!(repo.load("1").await.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_cleanup() {
+        // Given
+        let mut repo = InMemorySessionRepository::new();
+
+        // When
+        let result = repo.cleanup().await;
+
+        // Then
+        assert!(result.is_ok());
     }
 }
