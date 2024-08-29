@@ -7,6 +7,7 @@ pub struct User {
     pub username: String,
     pub login_attempts: i8,
     pub register_complete: bool,
+    pub primary_email_id: Option<i64>,
     pub register_date: DateTime<Utc>,
     pub last_update_date: DateTime<Utc>,
     pub last_login_date: Option<DateTime<Utc>>,
@@ -19,8 +20,9 @@ impl User {
         User {
             id: -1,
             username,
-            register_complete: false,
             login_attempts: 0,
+            register_complete: false,
+            primary_email_id: None,
             register_date: now,
             last_update_date: now,
             last_login_date: None,
@@ -41,5 +43,6 @@ mod tests {
         assert_eq!(user.register_date, user.last_update_date);
         assert_eq!(user.register_complete, false);
         assert_eq!(user.login_attempts, 0);
+        assert_eq!(user.primary_email_id, None);
     }
 }

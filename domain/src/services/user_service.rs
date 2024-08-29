@@ -1,28 +1,34 @@
+use crate::models::otp::{Otp, OTP_LENGTH};
+use crate::models::session::Session;
 use crate::models::user::User;
 use crate::repositories::id_provider::IdProvider;
-use crate::repositories::session_repository::{Session, SessionRepository};
+use crate::repositories::opt_repository::OtpRepository;
+use crate::repositories::session_repository::SessionRepository;
 use crate::repositories::user_repository::UserRepository;
 
-pub struct UserService<UR, SR, I>
+pub struct UserService<UR, SR, OR, IP>
 where
-    UR: UserRepository,
-    SR: SessionRepository,
-    I: IdProvider,
+    UR: UserRepository + Sync + Send,
+    SR: SessionRepository + Sync + Send,
+    OR: OtpRepository + Sync + Send,
+    IP: IdProvider + Sync + Send,
 {
     user_repository: UR,
     session_repository: SR,
-    id_provider: I,
+    otp_repository: OR,
+    id_provider: IP,
 }
 
 
-impl<UR, SR, I> UserService<UR, SR, I>
+impl<UR, SR, OR, IP> UserService<UR, SR, OR, IP>
 where
-    UR: UserRepository,
-    SR: SessionRepository,
-    I: IdProvider,
+    UR: UserRepository + Sync + Send,
+    SR: SessionRepository + Sync + Send,
+    OR: OtpRepository + Sync + Send,
+    IP: IdProvider + Sync + Send,
 {
-    pub fn new(user_repository: UR, session_repository: SR, id_provider: I) -> Self {
-        UserService { user_repository, session_repository, id_provider }
+    pub fn new(user_repository: UR, session_repository: SR, otp_repository: OR, id_provider: IP) -> Self {
+        UserService { user_repository, session_repository, id_provider, otp_repository }
     }
 
     pub async fn find_by_login(&self, login: &str) -> Result<User, String> {
@@ -34,7 +40,7 @@ where
         }
     }
 
-    pub async fn save(&self, user: User) -> Result<User, String> {
+    pub async fn save(&mut self, user: User) -> Result<User, String> {
         match self.user_repository.save(user).await {
             Ok(user) => Ok(user),
             Err(_) => Err("Error saving user".to_string()),
@@ -44,9 +50,11 @@ where
     pub async fn validate_otp(&self, login: &str, otp: &str) -> Result<User, String> {
         let user = self.user_repository.find_by_login(login).await;
 
+        // TODO count login attempts
+
         match user {
             Some(user) => {
-                let otp = self.user_repository.find_otp_by_username(login, otp).await;
+                let otp = self.otp_repository.find_by_id(otp).await;
 
                 match otp {
                     Some(_) => Ok(user),
@@ -57,22 +65,31 @@ where
         }
     }
 
-    pub async fn generate_session_id(&self, login: &str) -> Result<Session, String> {
+    pub async fn generate_session_id(&mut self, login: &str) -> Result<Session, String> {
         let user = self.user_repository.find_by_login(login).await;
 
         match user {
             Some(user) => {
-                let session_id = self.id_provider.get_id(32).await;
+                let session_id = self.id_provider.get_id(32);
 
-                let session = Session::new(session_id.clone(), user.id.clone());
+                let session = Session::new(session_id.clone(), user.id.to_string(), 300000);
 
-                match self.session_repository.save(&session).await {
-                    Ok(_) => Ok(session),
-                    Err(_) => Err("Error saving session".to_string()),
-                }
+                self.session_repository.save(&session).await;
+
+                Ok(session)
             }
             None => Err("User not found".to_string()),
         }
+    }
+
+    pub async fn save_otp(&mut self, user_id: i64) -> Result<String, String> {
+        let otp_id = self.id_provider.get_numeric_id(OTP_LENGTH);
+
+        let otp = Otp::new(otp_id.clone(), user_id, 300).map_err(|e| e.to_string())?;
+
+        self.otp_repository.save(otp).await.map_err(|_| "Error saving OTP".to_string())?;
+
+        Ok(otp_id)
     }
 }
 
