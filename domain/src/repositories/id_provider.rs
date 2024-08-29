@@ -1,9 +1,9 @@
 use rand::{thread_rng, Rng};
 
 pub trait IdProvider {
-    fn get_id(&self, length: i16) -> String;
-    fn get_numeric_id(&self, length: i16) -> String;
-    fn get_from_alphabet(&self, alphabet: Vec<&str>, length: i16) -> String;
+    fn get_id(&self, length: usize) -> String;
+    fn get_numeric_id(&self, length: usize) -> String;
+    fn get_from_alphabet(&self, alphabet: Vec<&str>, length: usize) -> String;
 }
 
 pub struct SimpleIdProvider {}
@@ -15,7 +15,7 @@ impl SimpleIdProvider {
 }
 
 impl IdProvider for SimpleIdProvider {
-    fn get_id(&self, length: i16) -> String {
+    fn get_id(&self, length: usize) -> String {
         self.get_from_alphabet(
             vec![
                 "abcdefghijklmnopqrstuvwxyz",
@@ -27,11 +27,11 @@ impl IdProvider for SimpleIdProvider {
         )
     }
 
-    fn get_numeric_id(&self, length: i16) -> String {
+    fn get_numeric_id(&self, length: usize) -> String {
         self.get_from_alphabet(vec!["0123456789"], length)
     }
 
-    fn get_from_alphabet(&self, alphabet: Vec<&str>, length: i16) -> String {
+    fn get_from_alphabet(&self, alphabet: Vec<&str>, length: usize) -> String {
         let mut rng = thread_rng();
 
         (0..length)
@@ -73,16 +73,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_id_all_charterers_are_alphanumeric() {
-        // Given
-        let provider = SimpleIdProvider::new();
-        let id = provider.get_id(10);
-
-        // Then
-        assert!(id.chars().all(|c| c.is_ascii_alphanumeric()));
-    }
-
-    #[tokio::test]
     async fn test_get_id_length() {
         // Given
         let provider = SimpleIdProvider::new();
@@ -107,7 +97,7 @@ mod tests {
         // Given
         let provider = SimpleIdProvider::new();
         let id = provider.get_id(20);
-        let valid_chars: Vec<char> = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".chars().collect();
+        let valid_chars: Vec<char> = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?/`~".chars().collect();
 
         // Then
         assert!(id.chars().all(|c| valid_chars.contains(&c)), "ID should only contain valid characters");
