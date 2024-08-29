@@ -56,10 +56,10 @@ jobs:
         with:
           name: Avatars binaries
 
-      - name: Run build for shared
+      - name: Run build for domain
         run: cargo build --manifest-path domain/Cargo.toml --release
 
-      - name: Run tests for shared
+      - name: Run tests for domain
         run: cargo test --manifest-path domain/Cargo.toml --release
 
   test_application:
@@ -74,10 +74,10 @@ jobs:
         with:
           name: Avatars binaries
 
-      - name: Run build for cli
+      - name: Run build for application
         run: cargo build --manifest-path application/Cargo.toml --release
 
-      - name: Run tests for cli
+      - name: Run tests for application
         run: cargo test --manifest-path application/Cargo.toml --release
 
   test_persistence:
@@ -92,8 +92,8 @@ jobs:
         with:
           name: Avatars binaries
 
-      - name: Run build for bot
+      - name: Run build for persistence
         run: cargo build --manifest-path persistence/Cargo.toml --release
 
-      - name: Run tests for crate3
+      - name: Run tests for persistence
         run: cargo test --manifest-path persistence/Cargo.toml --release
