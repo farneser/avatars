@@ -11,6 +11,9 @@ tera = "1.19"
 application = { path = "application" }
 persistence = { path = "persistence" }
 domain = { path = "domain" }
+web = { path = "web" }
+axum = "0.7.5"
+tower-http = { version = "0.5.2", features = ["full"] }
 
 [workspace]
 members = ["application", "domain", "persistence", "web"]

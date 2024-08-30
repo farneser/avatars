@@ -1,14 +1,27 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+use application::command::user::login_user::LoginUserCommand;
+use askama::Template;
+use axum::response::Html;
+use axum::routing::get;
+use axum::Router;
+
+#[derive(Template)]
+#[template(path = "index.html")]
+pub struct IndexTemplate<'a> {
+    pub name: &'a str,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub async fn index() -> Html<String> {
+    let template = IndexTemplate { name: "World" };
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+    Html(template.render().unwrap())
+}
+
+pub async fn hello() -> Html<String> {
+    Html("<p>Hello from the server!</p>".to_string())
+}
+
+pub fn create_router() -> Router {
+    Router::new()
+        .route("/", get(index))
+        .route("/hello", get(hello))
 }

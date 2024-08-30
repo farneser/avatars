@@ -1,0 +1,22 @@
+<!-- src/templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axum with HTMX</title>
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+</head>
+<body>
+<h1>Hello, {{ name }}!</h1>
+
+<button hx-get="/hello" hx-target="#greeting" hx-swap="innerHTML">
+    Click Me!
+</button>
+
+<div id="greeting"></div>
+
+<script src="static/test.js"></script>
+
+</body>
+</html>
