@@ -23,6 +23,7 @@ pub trait MailService {
     async fn send_otp(&self, email: &str, otp: OtpView) -> Result<(), EmailError>;
 }
 
+#[derive(Debug, Clone)]
 pub struct InMemoryMailService {}
 
 impl InMemoryMailService {

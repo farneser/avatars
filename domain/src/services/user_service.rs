@@ -9,6 +9,7 @@ use crate::repositories::OTP_LENGTH;
 use crate::views::otp_view::OtpView;
 use crate::views::user_view::UserView;
 
+#[derive(Debug, Clone)]
 pub struct UserService<UR, SR, OR, IP>
 where
     UR: UserRepository + Sync + Send,

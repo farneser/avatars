@@ -109,7 +109,7 @@ where
 
         match self.user_service.validate_otp(&user_view.username, &otp_code).await {
             Ok(u) => Ok(u),
-            Err((err)) => Err(AuthError(err)),
+            Err(err) => Err(AuthError(err)),
         }
     }
 }
@@ -118,10 +118,10 @@ where
 mod tests {
     use super::*;
     use domain::repositories::id_provider::SimpleIdProvider;
-    use domain::repositories::OTP_LENGTH;
     use domain::repositories::otp_repository::InMemoryOtpRepository;
     use domain::repositories::session_repository::InMemorySessionRepository;
     use domain::repositories::user_repository::InMemoryUserRepository;
+    use domain::repositories::OTP_LENGTH;
     use domain::services::mail_service::InMemoryMailService;
 
     #[tokio::test]
