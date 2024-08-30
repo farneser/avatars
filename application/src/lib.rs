@@ -23,7 +23,7 @@ impl AppContainer {
         id_provider: impl IdProvider + Sync + Send + 'static,
         mail_service: impl MailService + Sync + Send + 'static,
     ) -> Self {
-        let mediator = how_to_name_this_shit(
+        let mediator = build_mediator(
             user_repository,
             session_repository,
             otp_repository,
@@ -47,7 +47,7 @@ impl AppContainer {
     }
 }
 
-pub fn how_to_name_this_shit<UR, SR, OR, IP, MS>(
+pub fn build_mediator<UR, SR, OR, IP, MS>(
     user_repository: UR,
     session_repository: SR,
     otp_repository: OR,
@@ -74,4 +74,71 @@ where
     mediator.register_handler(login_ch);
 
     mediator
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::command::user::login_user::LoginUserCommand;
+    use crate::command::CommandHandler;
+    use async_trait::async_trait;
+    use domain::repositories::id_provider::SimpleIdProvider;
+    use domain::repositories::otp_repository::InMemoryOtpRepository;
+    use domain::repositories::session_repository::InMemorySessionRepository;
+    use domain::repositories::user_repository::InMemoryUserRepository;
+    use domain::services::mail_service::InMemoryMailService;
+
+    struct TestCommand;
+    struct TestResponse(pub String);
+    impl Command<TestResponse> for TestCommand {}
+
+    struct TestCommandHandler;
+    #[async_trait]
+    impl CommandHandler<TestCommand, TestResponse> for TestCommandHandler {
+        async fn handle(&mut self, _command: TestCommand) -> Result<TestResponse, AppStatus> {
+            Ok(TestResponse("Command result".to_string()))
+        }
+    }
+
+    #[tokio::test]
+    async fn test_send_command_without_handler() {
+        // Given
+        let mediator = Mediator::new();
+
+        // When
+        let command = TestCommand;
+        let response = mediator.send(command).await;
+
+        // Then
+        assert!(response.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_send_command_with_handler() {
+        // Given
+        let user_repository = InMemoryUserRepository::new();
+        let session_repository = InMemorySessionRepository::new();
+        let otp_repository = InMemoryOtpRepository::new();
+        let id_provider = SimpleIdProvider::new();
+        let mail_service = InMemoryMailService::new();
+
+        let app_container = AppContainer::new(
+            user_repository,
+            session_repository,
+            otp_repository,
+            id_provider,
+            mail_service,
+        );
+
+        let command = LoginUserCommand::new("user".to_string(), Some("password".to_string()));
+
+        // When
+        let response = app_container.send_command(command).await;
+
+        // Then
+        match response {
+            Err(AppStatus::AuthError(_)) => { assert!(true) }
+            _ => { assert!(false); }
+        }
+    }
 }

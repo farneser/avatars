@@ -1,18 +1,16 @@
 use application::command::user::login_user::LoginUserCommand;
 use application::shared::error::AppStatus;
 use application::AppContainer;
-use axum::Router;
 use domain::repositories::id_provider::SimpleIdProvider;
 use domain::repositories::otp_repository::InMemoryOtpRepository;
 use domain::repositories::session_repository::InMemorySessionRepository;
 use domain::repositories::user_repository::InMemoryUserRepository;
 use domain::services::mail_service::InMemoryMailService;
 use sqlx::PgPool;
-use std::net::SocketAddr;
+use std::sync::Arc;
 use tokio::io;
 use tokio::io::{stdin, AsyncBufReadExt, BufReader};
-use tower_http::services::ServeDir;
-use web::create_router;
+use web::Server;
 
 async fn test_db(pool: &PgPool) -> Result<(), sqlx::Error> {
     for i in 10..100 {
@@ -60,37 +58,21 @@ async fn main() -> Result<(), ()> {
     //     eprintln!("Error running test_db: {}", err);
     // }
 
-    let static_files_router = Router::new()
-        .fallback_service(ServeDir::new("./web/static"));
-
-    // Основной маршрутизатор
-    let app = Router::new()
-        .merge(create_router())
-        .nest_service("/static", static_files_router);
-
-
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-
-    println!("Listening on {}", addr);
-
-    // let listener = TcpListener::bind(&addr).await
-    //     .expect("Failed to bind to address");
-    //
-    // if let Err(e) = axum::serve(listener, app).await {
-    //     eprintln!("Server error: {}", e);
-    // }
-
     let pool = persistence::init_db().await.expect("Failed to initialize database");
 
     let command = LoginUserCommand::new("test".to_owned(), None);
 
-    let container = AppContainer::new(
+    let container = Arc::new(AppContainer::new(
         InMemoryUserRepository::new(),
         InMemorySessionRepository::new(),
         InMemoryOtpRepository::new(),
         SimpleIdProvider::new(),
         InMemoryMailService::new(),
-    );
+    ));
+
+    let server = Server::new(3000, container.clone());
+
+    server.run().await;
 
     match container.send_command(command).await {
         Ok(u) => println!("User: {:?}", u),

@@ -63,3 +63,55 @@ impl Mediator {
         handler.handle(command).await
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use async_trait::async_trait;
+
+    struct TestCommand;
+    struct TestResponse(pub String);
+    impl Command<TestResponse> for TestCommand {}
+    struct TestCommandHandler;
+
+    #[async_trait]
+    impl CommandHandler<TestCommand, TestResponse> for TestCommandHandler {
+        async fn handle(&mut self, _command: TestCommand) -> Result<TestResponse, AppStatus> {
+            Ok(TestResponse("Test executed".to_string()))
+        }
+    }
+
+    #[tokio::test]
+    async fn test_register_and_send_command() {
+        // Given
+        let mut mediator = Mediator::new();
+        let handler = TestCommandHandler;
+
+        mediator.register_handler(handler);
+
+        // When
+        let command = TestCommand;
+        let response = mediator.send(command).await;
+
+        // Then
+        assert!(response.is_ok());
+        assert_eq!(response.unwrap().0, "Test executed");
+    }
+
+    #[tokio::test]
+    async fn test_send_command_without_handler() {
+        // Given
+        let mediator = Mediator::new();
+
+        // When
+        let command = TestCommand;
+        let response = mediator.send(command).await;
+
+        // Then
+        assert!(response.is_err());
+        match response {
+            Err(AppStatus::InternalError(msg)) => assert_eq!(msg, "Handler not found".to_string()),
+            _ => panic!("Expected InternalError with message 'Handler not found'"),
+        }
+    }
+}

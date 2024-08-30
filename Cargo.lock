@@ -3041,6 +3041,7 @@ dependencies = [
  "askama_axum",
  "axum",
  "tokio",
+ "tower-http",
 ]
 
 [[package]]
