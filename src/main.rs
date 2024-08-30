@@ -58,7 +58,7 @@ async fn main() -> Result<(), ()> {
     //     eprintln!("Error running test_db: {}", err);
     // }
 
-    let pool = persistence::init_db().await.expect("Failed to initialize database");
+    // let pool = persistence::init_db().await.expect("Failed to initialize database");
 
     let command = LoginUserCommand::new("test".to_owned(), None);
 

@@ -7,6 +7,7 @@ use crate::repositories::session_repository::SessionRepository;
 use crate::repositories::user_repository::UserRepository;
 use crate::repositories::OTP_LENGTH;
 use crate::views::otp_view::OtpView;
+use crate::views::session_view::SessionView;
 use crate::views::user_view::UserView;
 
 #[derive(Debug, Clone)]
@@ -69,7 +70,7 @@ where
         }
     }
 
-    pub async fn generate_session_id(&mut self, login: &str) -> Result<Session, String> {
+    pub async fn generate_session(&mut self, login: &str) -> Result<SessionView, String> {
         let user = self.user_repository.find_by_login(login).await;
 
         match user {
@@ -80,7 +81,7 @@ where
 
                 self.session_repository.save(&session).await;
 
-                Ok(session)
+                Ok(SessionView::new(session, UserView::new(user)))
             }
             None => Err("User not found".to_string()),
         }
